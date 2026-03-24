@@ -9,11 +9,11 @@ import expenseRoutes from "./modules/expense/expense.routes";
 import budgetRoutes from "./modules/budget/budget.routes";
 
 import { errorHandler } from "./middlewares/error.middleware";
-import { swaggerDocument } from "./docs"; // 👈 IMPORTANT
+import { swaggerDocument } from "./docs";
 
 const app = express();
 
-// 🔐 security
+// security
 app.use(helmet());
 app.use(cors());
 
@@ -27,15 +27,15 @@ app.use(
 // body parser
 app.use(express.json());
 
-// 📚 Swagger Docs (🔥 ADD THIS)
+// Swagger Docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// 📦 Routes
+// Routes
 app.use("/api", authRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", budgetRoutes);
 
-// ❌ error handler (last)
+// error handler (last)
 app.use(errorHandler);
 
 export default app;

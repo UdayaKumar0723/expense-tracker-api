@@ -1,6 +1,6 @@
 # 🚀 Expense Tracker API
 
-A **production-ready backend API** built using Node.js, TypeScript, and MongoDB.
+A **Expense Tracker backend API** built using Node.js, TypeScript, and MongoDB.
 This project demonstrates clean architecture, authentication, validation, and real-world backend practices.
 
 ---
@@ -79,7 +79,11 @@ npm run dev
 ## 🌐 API Base URL
 
 ```
-http://localhost:3000/api
+Local http://localhost:3000/api
+```
+
+```
+production https://expense-tracker-api-7ntp.onrender.com/api
 ```
 
 ---
@@ -90,6 +94,10 @@ Swagger UI available at:
 
 ```
 http://localhost:3000/api-docs
+```
+
+```
+production swagger url https://expense-tracker-api-7ntp.onrender.com/api-docs/#/
 ```
 
 ---

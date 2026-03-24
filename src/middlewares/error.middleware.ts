@@ -9,9 +9,7 @@ export const errorHandler = (
     next: NextFunction
 ) => {
     logger.error(err.message);
-
     const statusCode = err.statusCode || 500;
-
     res.status(statusCode).json(
         errorResponse(err.message || "Internal Server Error")
     );

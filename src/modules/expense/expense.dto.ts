@@ -2,7 +2,7 @@ export type CreateExpenseDTO = {
     amount: number;
     category: string;
     note?: string;
-    date: string; // coming as string from request
+    date: string;
 };
 export type GetExpensesQuery = {
     category?: string;

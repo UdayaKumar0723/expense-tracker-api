@@ -7,7 +7,7 @@ export const swaggerDocument = {
     info: {
         title: "Expense Tracker API",
         version: "1.0.0",
-        description: "Production-ready API documentation"
+        description: "Expense Tracker API documentation"
     },
     servers: [
         {
@@ -28,8 +28,6 @@ export const swaggerDocument = {
                 bearerFormat: "JWT"
             }
         },
-
-        // 🔥 COMMON SCHEMAS (VERY IMPORTANT)
         schemas: {
             Expense: {
                 type: "object",

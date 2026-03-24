@@ -1,7 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
-// TypeScript interface
 export interface IUser extends Document {
     name: string;
     email: string;
@@ -9,7 +8,6 @@ export interface IUser extends Document {
     comparePassword(password: string): Promise<boolean>;
 }
 
-// Schema
 const userSchema = new Schema<IUser>(
     {
         name: {
@@ -36,7 +34,6 @@ const userSchema = new Schema<IUser>(
 
 userSchema.pre("save", async function (this: IUser) {
     if (!this.isModified("password")) return;
-
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
@@ -47,5 +44,4 @@ userSchema.methods.comparePassword = async function (
     return bcrypt.compare(password, this.password);
 };
 
-// Model
 export const User = mongoose.model<IUser>("User", userSchema);
