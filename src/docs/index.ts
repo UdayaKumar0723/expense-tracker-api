@@ -11,7 +11,12 @@ export const swaggerDocument = {
     },
     servers: [
         {
-            url: "http://localhost:3000"
+            url: "https://expense-tracker-api-7ntp.onrender.com",
+            description: "Production server"
+        },
+        {
+            url: "http://localhost:3000",
+            description: "Local server"
         }
     ],
 
