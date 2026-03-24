@@ -1,0 +1,69 @@
+{
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "testUser",
+                "email": "test@gmail.com",
+                "password": "123456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "data": {
+                    "_id": "userId",
+                    "email": "test@gmail.com"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "test@gmail.com",
+                "password": "123456"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "token": "JWT_TOKEN_HERE"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "paths": {
+    "/api/budget": {
+      "post": {
+        "summary": "Set monthly budget",
+        "description": "Create or update budget for a specific month and year",
+        "tags": ["Budget"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "amount": 5000,
+                "month": 3,
+                "year": 2026
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Budget set successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Budget set successfully",
+                  "data": {
+                    "_id": "budget123",
+                    "amount": 5000,
+                    "month": 3,
+                    "year": 2026,
+                    "userId": "user123",
+                    "createdAt": "2026-03-23T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Amount, month and year are required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+
+      "get": {
+        "summary": "Get monthly budget",
+        "description": "Fetch budget for a given month and year",
+        "tags": ["Budget"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 3
+            },
+            "description": "Month (1-12)"
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 2026
+            },
+            "description": "Year"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Budget fetched successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Budget fetched",
+                  "data": {
+                    "_id": "budget123",
+                    "amount": 5000,
+                    "month": 3,
+                    "year": 2026
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query params",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Month and year are required"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Budget not found"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  }
+}

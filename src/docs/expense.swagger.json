@@ -1,0 +1,176 @@
+{
+  "paths": {
+    "/api/expenses": {
+      "post": {
+        "summary": "Create expense",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "amount": 500,
+                "category": "food",
+                "note": "Lunch with friends",
+                "date": "2026-03-23"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Expense created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Expense created",
+                  "data": {
+                    "_id": "exp123",
+                    "amount": 500,
+                    "category": "food",
+                    "note": "Lunch with friends",
+                    "date": "2026-03-23",
+                    "userId": "user123",
+                    "createdAt": "2026-03-23T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Amount is required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+
+      "get": {
+        "summary": "Get all expenses",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "number", "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "number", "example": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expenses fetched successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Expenses fetched",
+                  "data": [
+                    {
+                      "_id": "exp1",
+                      "amount": 500,
+                      "category": "food",
+                      "note": "Lunch",
+                      "date": "2026-03-23"
+                    },
+                    {
+                      "_id": "exp2",
+                      "amount": 2000,
+                      "category": "travel",
+                      "note": "Bus ticket",
+                      "date": "2026-03-22"
+                    }
+                  ],
+                  "pagination": {
+                    "page": 1,
+                    "limit": 10,
+                    "total": 25
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+
+    "/api/expenses/analytics": {
+      "get": {
+        "summary": "Get expense analytics",
+        "description": "Returns total spending, category breakdown, and insights",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 3 },
+            "description": "Month (1-12)"
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 2026 },
+            "description": "Year"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data fetched",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Analytics fetched",
+                  "data": {
+                    "totalSpent": 8500,
+                    "categoryBreakdown": [
+                      { "category": "food", "total": 3000 },
+                      { "category": "travel", "total": 2000 }
+                    ],
+                    "topCategory": "food",
+                    "averageExpense": 850
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query params",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Month and year are required"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  }
+}
