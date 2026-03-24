@@ -31,7 +31,7 @@ router.get(
     getAnalytics
 );
 
-router.put("/expenses/:id", authMiddleware, updateExpense);
+router.patch("/expenses/:id", authMiddleware, updateExpense);
 router.delete("/expenses/:id", authMiddleware, deleteExpense);
 
 export default router;

@@ -112,6 +112,104 @@
       }
     },
 
+    "/api/expenses/{id}": {
+      "patch": {
+        "summary": "Update expense",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "exp123"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "amount": 700,
+                "category": "food",
+                "note": "Dinner",
+                "date": "2026-03-24"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Expense updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Expense updated successfully",
+                  "data": {
+                    "_id": "exp123",
+                    "amount": 700,
+                    "category": "food",
+                    "note": "Dinner",
+                    "date": "2026-03-24"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Expense not found"
+          }
+        }
+      },
+
+      "delete": {
+        "summary": "Delete expense",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "exp123"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expense deleted successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Expense deleted successfully",
+                  "data": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Expense not found"
+          }
+        }
+      }
+    },
+
     "/api/expenses/analytics": {
       "get": {
         "summary": "Get expense analytics",
