@@ -2,17 +2,25 @@ import mongoose from "mongoose";
 
 import { Expense } from "../../models/expense.model";
 import { Budget } from "../../models/budget.model";
+import { Category } from "../../models/category.model";
 
 export const createExpense = async (
     userId: string,
     data: any
 ) => {
-    const { amount, category, note, date } = data;
+    const { amount, categoryId, note, date } = data;
     const expenseDate = new Date(date);
+    const category = await Category.findOne({
+        _id: categoryId,
+        userId
+    });
+    if (!category) {
+        throw new Error("Invalid category");
+    }
     const expense = await Expense.create({
         userId,
         amount,
-        category,
+        categoryId,
         note,
         date: expenseDate
     });
@@ -63,29 +71,33 @@ export const getExpenses = async (
     userId: string,
     query: any
 ) => {
-    const { category, startDate, endDate, page = 1, limit = 10 } = query;
-    const filter: any = { userId };
-    if (category) filter.category = category;
-    if (startDate || endDate) {
-        filter.date = {};
-        if (startDate) filter.date.$gte = new Date(startDate);
-        if (endDate) filter.date.$lte = new Date(endDate);
+    const { page = 1, limit = 10, month, year } = query;
+    const filter: any = {
+        userId: new mongoose.Types.ObjectId(userId)
+    };
+    // Filter by month & year
+    if (month && year) {
+        const startDate = new Date(Number(year), Number(month) - 1, 1);
+        const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
+        filter.date = {
+            $gte: startDate,
+            $lte: endDate
+        };
     }
     const skip = (Number(page) - 1) * Number(limit);
-    const [expenses, total] = await Promise.all([
-        Expense.find(filter)
-            .sort({ date: -1 })
-            .skip(skip)
-            .limit(Number(limit)),
-        Expense.countDocuments(filter)
-    ]);
+    // Fetch expenses
+    const expenses = await Expense.find(filter)
+        .populate("categoryId", "name")
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(Number(limit));
+    // Total count (for pagination)
+    const total = await Expense.countDocuments(filter);
     return {
-        data: expenses,
-        pagination: {
-            total,
-            page: Number(page),
-            limit: Number(limit)
-        }
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        data: expenses
     };
 };
 export const getExpenseSummary = async (
@@ -95,7 +107,7 @@ export const getExpenseSummary = async (
 ) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
-    const result = await mongoose.model("Expense").aggregate([
+    const result = await Expense.aggregate([
         {
             $match: {
                 userId: new mongoose.Types.ObjectId(userId),
@@ -106,8 +118,17 @@ export const getExpenseSummary = async (
             }
         },
         {
+            $lookup: {
+                from: "categories",
+                localField: "categoryId",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        { $unwind: "$category" },
+        {
             $group: {
-                _id: "$category",
+                _id: "$category.name",
                 total: { $sum: "$amount" }
             }
         }
@@ -123,15 +144,29 @@ export const getExpenseSummary = async (
 };
 export const updateExpense = async (
     userId: string,
-    expenseId: string,
+    id: string,
     data: any
 ) => {
+    const { categoryId } = data;
+    // Validate category if provided
+    if (categoryId) {
+        const category = await Category.findOne({
+            _id: categoryId,
+            userId
+        });
+
+        if (!category) {
+            throw new Error("Invalid category");
+        }
+    }
     const expense = await Expense.findOneAndUpdate(
-        { _id: expenseId, userId },
+        { _id: id, userId },
         data,
         { new: true }
-    );
-    if (!expense) throw new Error("Expense not found");
+    ).populate("categoryId", "name");
+    if (!expense) {
+        throw new Error("Expense not found");
+    }
     return expense;
 };
 export const deleteExpense = async (
@@ -161,8 +196,17 @@ export const getAnalytics = async (
             }
         },
         {
+            $lookup: {
+                from: "categories",
+                localField: "categoryId",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        { $unwind: "$category" },
+        {
             $group: {
-                _id: "$category",
+                _id: "$category.name",
                 total: { $sum: "$amount" },
                 count: { $sum: 1 }
             }
@@ -172,6 +216,7 @@ export const getAnalytics = async (
     const topCategory =
         result.sort((a, b) => b.total - a.total)[0]?._id || null;
 
+    const totalCount = result.reduce((acc, item) => acc + item.count, 0);
     return {
         totalSpent,
         categoryBreakdown: result.map((r) => ({
@@ -179,8 +224,6 @@ export const getAnalytics = async (
             total: r.total
         })),
         topCategory,
-        averageExpense: result.length
-            ? totalSpent / result.reduce((a, b) => a + b.count, 0)
-            : 0
+        averageExpense: totalCount ? totalSpent / totalCount : 0
     };
 };

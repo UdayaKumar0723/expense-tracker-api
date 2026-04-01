@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const createExpenseSchema = z.object({
-    amount: z.number().positive("Amount must be > 0"),
-    category: z.string().min(2),
+    amount: z.number().describe("Amount is required"),
+    categoryId: z.string().describe("CategoryId is required"),
     note: z.string().optional(),
-    date: z.string()
+    date: z.string().describe("Date is required")
 });

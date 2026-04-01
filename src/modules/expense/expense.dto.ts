@@ -1,11 +1,11 @@
 export type CreateExpenseDTO = {
     amount: number;
-    category: string;
+    categoryId: string;
     note?: string;
     date: string;
 };
 export type GetExpensesQuery = {
-    category?: string;
+    categoryId?: string;
     startDate?: string;
     endDate?: string;
 };

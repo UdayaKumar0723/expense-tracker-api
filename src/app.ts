@@ -10,6 +10,8 @@ import budgetRoutes from "./modules/budget/budget.routes";
 
 import { errorHandler } from "./middlewares/error.middleware";
 import { swaggerDocument } from "./docs";
+import categoryRoutes from "./modules/category/category.routes";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api", authRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", budgetRoutes);
+app.use("/api", categoryRoutes);
+app.use("/api", dashboardRoutes);
 
 // error handler (last)
 app.use(errorHandler);

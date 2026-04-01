@@ -1,0 +1,58 @@
+{
+  "paths": {
+    "/api/dashboard": {
+      "get": {
+        "summary": "Get dashboard data",
+        "tags": ["Dashboard"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 3 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number", "example": 2026 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard fetched",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Dashboard fetched successfully",
+                  "data": {
+                    "totalSpent": 8500,
+                    "budget": 10000,
+                    "remaining": 1500,
+                    "topCategories": [
+                      { "category": "Food", "total": 3000 },
+                      { "category": "Travel", "total": 2000 }
+                    ],
+                    "recentExpenses": [
+                      {
+                        "_id": "exp1",
+                        "amount": 500,
+                        "categoryId": {
+                          "_id": "cat1",
+                          "name": "Food"
+                        }
+                      }
+                    ],
+                    "insight": "Near budget limit"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+import mongoose from "mongoose";
+import { Expense } from "../../models/expense.model";
+import { Budget } from "../../models/budget.model";
+
+export const getDashboardData = async (
+    userId: string,
+    month: number,
+    year: number
+) => {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+    // Total + Category Breakdown
+    const analytics = await Expense.aggregate([
+        {
+            $match: {
+                userId: new mongoose.Types.ObjectId(userId),
+                date: { $gte: startDate, $lte: endDate }
+            }
+        },
+        {
+            $lookup: {
+                from: "categories",
+                localField: "categoryId",
+                foreignField: "_id",
+                as: "category"
+            }
+        },
+        { $unwind: "$category" },
+        {
+            $group: {
+                _id: "$category.name",
+                total: { $sum: "$amount" }
+            }
+        }
+    ]);
+    const totalSpent = analytics.reduce((sum, i) => sum + i.total, 0);
+    const topCategories = analytics
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 3)
+        .map((i) => ({
+            category: i._id,
+            total: i.total
+        }));
+    // Budget
+    const budget = await Budget.findOne({
+        userId,
+        month,
+        year
+    });
+    const budgetAmount = budget?.amount || 0;
+    // Recent Expenses
+    const recentExpenses = await Expense.find({
+        userId,
+        date: { $gte: startDate, $lte: endDate }
+    })
+        .populate("categoryId", "name")
+        .sort({ date: -1 })
+        .limit(5);
+    // Insights
+    let insight = "Good spending 👍";
+    if (budgetAmount && totalSpent > budgetAmount) {
+        insight = "⚠️ Budget exceeded!";
+    } else if (budgetAmount && totalSpent > budgetAmount * 0.8) {
+        insight = "⚠️ Near budget limit";
+    }
+    return {
+        totalSpent,
+        budget: budgetAmount,
+        remaining: budgetAmount - totalSpent,
+        topCategories,
+        recentExpenses,
+        insight
+    };
+};
