@@ -1,12 +1,19 @@
 import mongoose from "mongoose";
+
 import { Expense } from "../../models/expense.model";
 import { Budget } from "../../models/budget.model";
+import { redis } from "../../config/redis";
 
 export const getDashboardData = async (
     userId: string,
     month: number,
     year: number
 ) => {
+    const cacheKey = `dashboard:${userId}:${month}:${year}`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return JSON.parse(cachedData);
+    }
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
     // Total + Category Breakdown
@@ -63,7 +70,7 @@ export const getDashboardData = async (
     } else if (budgetAmount && totalSpent > budgetAmount * 0.8) {
         insight = "⚠️ Near budget limit";
     }
-    return {
+    const result = {
         totalSpent,
         budget: budgetAmount,
         remaining: budgetAmount - totalSpent,
@@ -71,4 +78,6 @@ export const getDashboardData = async (
         recentExpenses,
         insight
     };
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 300);
+    return result;
 };

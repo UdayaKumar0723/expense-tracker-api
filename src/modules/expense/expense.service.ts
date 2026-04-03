@@ -4,6 +4,7 @@ import { Parser } from "json2csv";
 import { Expense } from "../../models/expense.model";
 import { Budget } from "../../models/budget.model";
 import { Category } from "../../models/category.model";
+import { redis } from "../../config/redis";
 
 export const createExpense = async (
     userId: string,
@@ -43,10 +44,7 @@ export const createExpense = async (
             {
                 $match: {
                     userId: expense.userId,
-                    date: {
-                        $gte: startDate,
-                        $lte: endDate
-                    }
+                    date: { $gte: startDate, $lte: endDate }
                 }
             },
             {
@@ -62,6 +60,13 @@ export const createExpense = async (
             warning = "Budget exceeded";
         }
     }
+    /* CACHE INVALIDATION */
+    await redis.del(`dashboard:${userId}:${month}:${year}`);
+    await redis.del(`analytics:${userId}:${month}:${year}`);
+    await redis.del(`summary:${userId}:${month}:${year}`);
+
+    const keys = await redis.keys(`expenses:${userId}:*`);
+    if (keys.length) await redis.del(keys);
 
     return {
         expense,
@@ -73,49 +78,54 @@ export const getExpenses = async (
     query: any
 ) => {
     const { page = 1, limit = 10, month, year } = query;
+    const cacheKey = `expenses:${userId}:${page}:${limit}:${month || "all"}:${year || "all"}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
     const filter: any = {
         userId: new mongoose.Types.ObjectId(userId)
     };
-    // Filter by month & year
+
     if (month && year) {
         const startDate = new Date(Number(year), Number(month) - 1, 1);
         const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
-        filter.date = {
-            $gte: startDate,
-            $lte: endDate
-        };
+
+        filter.date = { $gte: startDate, $lte: endDate };
     }
     const skip = (Number(page) - 1) * Number(limit);
-    // Fetch expenses
     const expenses = await Expense.find(filter)
         .populate("categoryId", "name")
         .sort({ date: -1 })
         .skip(skip)
         .limit(Number(limit));
-    // Total count (for pagination)
     const total = await Expense.countDocuments(filter);
-    return {
+    const result = {
         total,
         page: Number(page),
         limit: Number(limit),
         data: expenses
     };
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 300);
+    return result;
 };
 export const getExpenseSummary = async (
     userId: string,
     month: number,
     year: number
 ) => {
+    const cacheKey = `summary:${userId}:${month}:${year}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
     const result = await Expense.aggregate([
         {
             $match: {
                 userId: new mongoose.Types.ObjectId(userId),
-                date: {
-                    $gte: startDate,
-                    $lte: endDate
-                }
+                date: { $gte: startDate, $lte: endDate }
             }
         },
         {
@@ -141,7 +151,11 @@ export const getExpenseSummary = async (
         total += item.total;
     });
 
-    return { total, byCategory };
+    const finalResult = { total, byCategory };
+
+    await redis.set(cacheKey, JSON.stringify(finalResult), "EX", 300);
+
+    return finalResult;
 };
 export const updateExpense = async (
     userId: string,
@@ -149,7 +163,6 @@ export const updateExpense = async (
     data: any
 ) => {
     const { categoryId } = data;
-    // Validate category if provided
     if (categoryId) {
         const category = await Category.findOne({
             _id: categoryId,
@@ -168,6 +181,18 @@ export const updateExpense = async (
     if (!expense) {
         throw new Error("Expense not found");
     }
+    const expenseDate = expense.date;
+    const month = new Date(expenseDate).getMonth() + 1;
+    const year = new Date(expenseDate).getFullYear();
+
+    /* CACHE INVALIDATION */
+    await redis.del(`dashboard:${userId}:${month}:${year}`);
+    await redis.del(`analytics:${userId}:${month}:${year}`);
+    await redis.del(`summary:${userId}:${month}:${year}`);
+
+    const keys = await redis.keys(`expenses:${userId}:*`);
+    if (keys.length) await redis.del(keys);
+
     return expense;
 };
 export const deleteExpense = async (
@@ -179,6 +204,19 @@ export const deleteExpense = async (
         userId
     });
     if (!expense) throw new Error("Expense not found");
+
+    const expenseDate = expense.date;
+    const month = new Date(expenseDate).getMonth() + 1;
+    const year = new Date(expenseDate).getFullYear();
+
+    /* CACHE INVALIDATION */
+    await redis.del(`dashboard:${userId}:${month}:${year}`);
+    await redis.del(`analytics:${userId}:${month}:${year}`);
+    await redis.del(`summary:${userId}:${month}:${year}`);
+
+    const keys = await redis.keys(`expenses:${userId}:*`);
+    if (keys.length) await redis.del(keys);
+
     return expense;
 };
 
@@ -187,6 +225,11 @@ export const getAnalytics = async (
     month: number,
     year: number
 ) => {
+    const cacheKey = `analytics:${userId}:${month}:${year}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
     const result = await Expense.aggregate([
@@ -218,15 +261,19 @@ export const getAnalytics = async (
         result.sort((a, b) => b.total - a.total)[0]?._id || null;
 
     const totalCount = result.reduce((acc, item) => acc + item.count, 0);
-    return {
+    const finalResult = {
         totalSpent,
         categoryBreakdown: result.map((r) => ({
             category: r._id,
             total: r.total
         })),
         topCategory,
-        averageExpense: totalCount ? totalSpent / totalCount : 0
+        averageExpense: totalCount
+            ? totalSpent / totalCount
+            : 0
     };
+    await redis.set(cacheKey, JSON.stringify(finalResult), "EX", 300);
+    return finalResult;
 };
 export const exportExpenses = async (
     userId: string,
@@ -234,19 +281,15 @@ export const exportExpenses = async (
 ) => {
     const { month, year } = query;
     const filter: any = { userId };
-    // Optional filter
     if (month && year) {
         const startDate = new Date(Number(year), Number(month) - 1, 1);
         const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
-        filter.date = {
-            $gte: startDate,
-            $lte: endDate
-        };
+        filter.date = { $gte: startDate, $lte: endDate };
     }
     const expenses = await Expense.find(filter)
         .populate("categoryId", "name")
         .sort({ date: -1 });
-    // Transform data for CSV
+
     const formatted = expenses.map((exp: any) => ({
         amount: exp.amount,
         category: exp.categoryId?.name,

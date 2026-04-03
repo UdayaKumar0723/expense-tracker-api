@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./modules/auth/auth.routes";
@@ -13,6 +12,7 @@ import { swaggerDocument } from "./docs";
 import categoryRoutes from "./modules/category/category.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 import reportRoutes from "./modules/report/report.routes";
+import { apiLimiter, authLimiter } from "./middlewares/rateLimit";
 
 const app = express();
 
@@ -20,18 +20,16 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 
-app.use(
-    rateLimit({
-        windowMs: 15 * 60 * 1000,
-        max: 100
-    })
-);
-
 // body parser
 app.use(express.json());
 
-// Swagger Docs
+// Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+
+app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api", authRoutes);
@@ -41,7 +39,6 @@ app.use("/api", categoryRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", reportRoutes);
 
-// error handler (last)
 app.use(errorHandler);
 
 export default app;
