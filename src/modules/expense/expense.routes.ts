@@ -1,5 +1,6 @@
 import express from "express";
-import { createExpense, getExpenses, getSummary, updateExpense, deleteExpense, getAnalytics } from "./expense.controller";
+
+import { createExpense, getExpenses, getSummary, updateExpense, deleteExpense, getAnalytics, exportExpenses } from "./expense.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import { createExpenseSchema } from "./expense.validation";
@@ -29,6 +30,12 @@ router.get(
     "/expenses/analytics",
     authMiddleware,
     getAnalytics
+);
+
+router.get(
+    "/expenses/export",
+    authMiddleware,
+    exportExpenses
 );
 
 router.patch("/expenses/:id", authMiddleware, updateExpense);

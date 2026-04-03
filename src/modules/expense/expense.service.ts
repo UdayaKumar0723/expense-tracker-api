@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Parser } from "json2csv";
 
 import { Expense } from "../../models/expense.model";
 import { Budget } from "../../models/budget.model";
@@ -226,4 +227,34 @@ export const getAnalytics = async (
         topCategory,
         averageExpense: totalCount ? totalSpent / totalCount : 0
     };
+};
+export const exportExpenses = async (
+    userId: string,
+    query: any
+) => {
+    const { month, year } = query;
+    const filter: any = { userId };
+    // Optional filter
+    if (month && year) {
+        const startDate = new Date(Number(year), Number(month) - 1, 1);
+        const endDate = new Date(Number(year), Number(month), 0, 23, 59, 59);
+        filter.date = {
+            $gte: startDate,
+            $lte: endDate
+        };
+    }
+    const expenses = await Expense.find(filter)
+        .populate("categoryId", "name")
+        .sort({ date: -1 });
+    // Transform data for CSV
+    const formatted = expenses.map((exp: any) => ({
+        amount: exp.amount,
+        category: exp.categoryId?.name,
+        note: exp.note,
+        date: exp.date
+    }));
+    const parser = new Parser({
+        fields: ["amount", "category", "note", "date"]
+    });
+    return parser.parse(formatted);
 };

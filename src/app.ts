@@ -12,6 +12,7 @@ import { errorHandler } from "./middlewares/error.middleware";
 import { swaggerDocument } from "./docs";
 import categoryRoutes from "./modules/category/category.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
+import reportRoutes from "./modules/report/report.routes";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api", expenseRoutes);
 app.use("/api", budgetRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", dashboardRoutes);
+app.use("/api", reportRoutes);
 
 // error handler (last)
 app.use(errorHandler);

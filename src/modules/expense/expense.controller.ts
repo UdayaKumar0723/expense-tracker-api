@@ -144,3 +144,20 @@ export const getAnalytics = async (req: Request, res: Response) => {
         });
     }
 };
+export const exportExpenses = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user!.userId;
+        const csv = await expenseService.exportExpenses(
+            userId,
+            req.query
+        );
+        res.header("Content-Type", "text/csv");
+        res.attachment("expenses.csv");
+        return res.send(csv);
+    } catch (error: any) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

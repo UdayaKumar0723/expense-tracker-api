@@ -235,6 +235,30 @@
           }
         }
       }
+    },
+    "/api/expenses/export": {
+      "get": {
+        "summary": "Export expenses as CSV",
+        "tags": ["Expenses"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "schema": { "type": "number", "example": 3 }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "schema": { "type": "number", "example": 2026 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file downloaded"
+          }
+        }
+      }
     }
   }
 }

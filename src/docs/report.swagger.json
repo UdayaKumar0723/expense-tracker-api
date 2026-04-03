@@ -1,0 +1,28 @@
+{
+  "paths": {
+    "/api/reports/email": {
+      "post": {
+        "summary": "Send monthly report email",
+        "tags": ["Reports"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "user@gmail.com",
+                "month": 3,
+                "year": 2026
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully"
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ import expense from "./expense.swagger.json";
 import budget from "./budget.swagger.json";
 import category from "./category.swagger.json";
 import dashboard from "./dashboard.swagger.json";
+import report from "./report.swagger.json";
 
 export const swaggerDocument = {
     openapi: "3.0.0",
@@ -83,6 +84,7 @@ export const swaggerDocument = {
     paths: {
         ...auth.paths,
         ...dashboard.paths,
+        ...report.paths,
         ...expense.paths,
         ...budget.paths,
         ...category.paths
