@@ -13,6 +13,7 @@ import categoryRoutes from "./modules/category/category.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 import reportRoutes from "./modules/report/report.routes";
 import { apiLimiter, authLimiter } from "./middlewares/rateLimit";
+import { requestLogger } from "./middlewares/logger.middleware";
 
 const app = express();
 
@@ -25,6 +26,9 @@ app.use(express.json());
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// logging
+app.use(requestLogger);
 
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
