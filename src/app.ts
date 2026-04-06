@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
+import dns from "node:dns";
 
+dns.setDefaultResultOrder("ipv4first");
 import authRoutes from "./modules/auth/auth.routes";
 import expenseRoutes from "./modules/expense/expense.routes";
 import budgetRoutes from "./modules/budget/budget.routes";
