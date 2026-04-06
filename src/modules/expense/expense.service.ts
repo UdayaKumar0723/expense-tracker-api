@@ -34,17 +34,20 @@ export const createExpense = async (
         year
     });
 
-    let warning = null;
-
-    if (budget) {
+    let warning: string | null = null;
+    if (budget === null) {
+        warning = "No budget set for this month";
+    } else {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0, 23, 59, 59);
-
         const result = await Expense.aggregate([
             {
                 $match: {
                     userId: expense.userId,
-                    date: { $gte: startDate, $lte: endDate }
+                    date: {
+                        $gte: startDate,
+                        $lte: endDate
+                    }
                 }
             },
             {
@@ -54,20 +57,25 @@ export const createExpense = async (
                 }
             }
         ]);
-
         const totalSpent = result[0]?.total || 0;
         if (totalSpent > budget.amount) {
             warning = "Budget exceeded";
         }
     }
-    /* CACHE INVALIDATION */
-    await redis.del(`dashboard:${userId}:${month}:${year}`);
-    await redis.del(`analytics:${userId}:${month}:${year}`);
-    await redis.del(`summary:${userId}:${month}:${year}`);
-
-    const keys = await redis.keys(`expenses:${userId}:*`);
-    if (keys.length) await redis.del(keys);
-
+    //CACHE INVALIDATION
+    try {
+        await Promise.all([
+            redis.del(`dashboard:${userId}:${month}:${year}`),
+            redis.del(`analytics:${userId}:${month}:${year}`),
+            redis.del(`summary:${userId}:${month}:${year}`)
+        ]);
+        const keys = await redis.keys(`expenses:${userId}:*`);
+        if (keys.length) {
+            await redis.del(keys);
+        }
+    } catch (err) {
+        console.error("Redis cache invalidation failed:", err);
+    }
     return {
         expense,
         warning

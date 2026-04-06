@@ -54,7 +54,11 @@ export const getDashboardData = async (
         month,
         year
     });
-    const budgetAmount = budget?.amount || 0;
+    const budgetAmount = budget?.amount || null;
+    let remaining = null;
+    if (budgetAmount !== null) {
+        remaining = budgetAmount - totalSpent;
+    }
     // Recent Expenses
     const recentExpenses = await Expense.find({
         userId,
@@ -65,15 +69,17 @@ export const getDashboardData = async (
         .limit(5);
     // Insights
     let insight = "Good spending 👍";
-    if (budgetAmount && totalSpent > budgetAmount) {
+    if (budgetAmount === null) {
+        insight = "No budget set";
+    } else if (totalSpent > budgetAmount) {
         insight = "⚠️ Budget exceeded!";
-    } else if (budgetAmount && totalSpent > budgetAmount * 0.8) {
+    } else if (totalSpent > budgetAmount * 0.8) {
         insight = "⚠️ Near budget limit";
     }
     const result = {
         totalSpent,
         budget: budgetAmount,
-        remaining: budgetAmount - totalSpent,
+        remaining,
         topCategories,
         recentExpenses,
         insight
